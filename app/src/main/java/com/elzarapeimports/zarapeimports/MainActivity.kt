@@ -164,64 +164,72 @@ fun ZarapeApp() {
 
 @Composable
 fun VentasScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Gestión de Ventas",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = SarapeRojo
+    var mostrarNuevaVenta by remember { mutableStateOf(false) }
+    
+    if (mostrarNuevaVenta) {
+        com.elzarapeimports.zarapeimports.screens.ventas.NuevaVentaScreen(
+            onBack = { mostrarNuevaVenta = false }
         )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Tarjetas de menú de colores para las diferentes funciones
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MenuCard(
-                title = "Nueva Venta",
-                icon = Icons.Filled.Add,
-                color = SarapeRojo,
-                onClick = { /* TODO */ },
-                modifier = Modifier.weight(1f)
+            Text(
+                text = "Gestión de Ventas",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = SarapeRojo
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            MenuCard(
-                title = "Historial",
-                icon = Icons.Filled.List,
-                color = SarapeNaranja,
-                onClick = { /* TODO */ },
-                modifier = Modifier.weight(1f)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            MenuCard(
-                title = "Devoluciones",
-                icon = Icons.Filled.Undo,
-                color = SarapeAzul,
-                onClick = { /* TODO */ },
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            MenuCard(
-                title = "Cotizaciones",
-                icon = Icons.Filled.Description,
-                color = SarapeMorado,
-                onClick = { /* TODO */ },
-                modifier = Modifier.weight(1f)
-            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Tarjetas de menú de colores para las diferentes funciones
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MenuCard(
+                    title = "Nueva Venta",
+                    icon = Icons.Filled.Add,
+                    color = SarapeRojo,
+                    onClick = { mostrarNuevaVenta = true },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                MenuCard(
+                    title = "Historial",
+                    icon = Icons.Filled.List,
+                    color = SarapeNaranja,
+                    onClick = { /* TODO */ },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MenuCard(
+                    title = "Devoluciones",
+                    icon = Icons.Filled.Undo,
+                    color = SarapeAzul,
+                    onClick = { /* TODO */ },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                MenuCard(
+                    title = "Cotizaciones",
+                    icon = Icons.Filled.Description,
+                    color = SarapeMorado,
+                    onClick = { /* TODO */ },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
