@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+
+    <!-- Fondo del logo en color sarape background -->
+    <path
+        android:fillColor="#FFF8E8"
+        android:pathData="M30,0L210,0A30,30 0,0 1,240 30L240,210A30,30 0,0 1,210 240L30,240A30,30 0,0 1,0 210L0,30A30,30 0,0 1,30 0z" />
+
+    <!-- Franjas de sarape -->
+    <path
+        android:fillColor="#E63946"
+        android:pathData="M40,60L200,60L200,70L40,70Z" />
+    <path
+        android:fillColor="#F4A261"
+        android:pathData="M40,80L200,80L200,90L40,90Z" />
+    <path
+        android:fillColor="#0077B6"
+        android:pathData="M40,100L200,100L200,110L40,110Z" />
+    <path
+        android:fillColor="#9D4EDD"
+        android:pathData="M40,120L200,120L200,130L40,130Z" />
+    <path
+        android:fillColor="#2A9D8F"
+        android:pathData="M40,140L200,140L200,150L40,150Z" />
+    <path
+        android:fillColor="#F26430"
+        android:pathData="M40,160L200,160L200,170L40,170Z" />
+
+    <!-- Texto "ZARAPE" -->
+    <path
+        android:fillColor="#774936"
+        android:pathData="M50,190L50,40L60,30L70,40L80,30L90,40L100,30L110,40L120,30L130,40L140,30L150,40L160,30L170,40L180,30L190,40L190,190Z" />
+    <path
+        android:fillColor="#FFF8E8"
+        android:pathData="M55,185L55,45L60,35L70,45L80,35L90,45L100,35L110,45L120,35L130,45L140,35L150,45L160,35L170,45L180,35L185,45L185,185Z" />
+    <path
+        android:fillColor="#774936"
+        android:pathData="M70,55L170,55L170,65L70,65Z" />
+    <path
+        android:fillColor="#E63946"
+        android:pathData="M75,80L90,80L90,100L75,100Z" />
+    <path
+        android:fillColor="#0077B6"
+        android:pathData="M100,80L115,80L115,100L100,100Z" />
+    <path
+        android:fillColor="#9D4EDD"
+        android:pathData="M125,80L140,80L140,100L125,100Z" />
+    <path
+        android:fillColor="#2A9D8F"
+        android:pathData="M150,80L165,80L165,100L150,100Z" />
+
+    <!-- Texto "IMPORTS" -->
+    <path
+        android:fillColor="#774936"
+        android:pathData="M60,210L180,210L180,190L60,190Z" />
+    <path
+        android:fillColor="#FFF8E8"
+        android:pathData="M65,205L175,205L175,195L65,195Z" />
+    <path
+        android:fillColor="#774936"
+        android:strokeWidth="2"
+        android:strokeColor="#774936"
+        android:pathData="M90,200L150,200" />
+</vector> 
