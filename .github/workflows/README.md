@@ -11,7 +11,7 @@ Este flujo de trabajo se activa cuando:
 - Se crea un pull request hacia la rama `master`
 
 Realiza las siguientes tareas:
-- Configura el entorno con JDK 11
+- Configura el entorno con JDK 17
 - Compila el proyecto con Gradle
 - Ejecuta pruebas unitarias
 - Realiza verificación de lint
@@ -34,7 +34,7 @@ No se requiere configuración adicional. Los flujos de trabajo se ejecutarán au
 
 - Todas las acciones se han actualizado a sus versiones más recientes (v4)
 - Se han añadido permisos específicos para garantizar la correcta ejecución
-- Se utiliza JDK 11 para mantener compatibilidad con la configuración del proyecto
+- Se utiliza JDK 17 para satisfacer los requisitos del Android Gradle Plugin 8.9.1
 
 ## Personalización
 
