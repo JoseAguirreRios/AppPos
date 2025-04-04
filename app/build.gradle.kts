@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -62,6 +63,13 @@ dependencies {
     
     // Formato de números y fechas
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    
+    // Firebase - implementación nueva
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

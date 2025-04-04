@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "732532939511",
+    "project_id": "zarape-ff4bf",
+    "storage_bucket": "zarape-ff4bf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:732532939511:android:b171a5aecba4133a5dd1f2",
+        "android_client_info": {
+          "package_name": "com.elzarapeimports.zarapeimports"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaOGOh6bwYa6Wefaoa0zgGHr3D0kBQRGY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

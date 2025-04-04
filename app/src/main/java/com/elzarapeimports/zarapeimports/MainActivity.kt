@@ -23,8 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.elzarapeimports.zarapeimports.firebase.FirebaseDataSync
+import com.elzarapeimports.zarapeimports.firebase.FirebaseManager
+import com.elzarapeimports.zarapeimports.firebase.LoginScreen
 import com.elzarapeimports.zarapeimports.model.Venta
 import com.elzarapeimports.zarapeimports.ui.theme.*
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,15 +36,73 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ZarapeImportsTheme {
-                ZarapeApp()
+                ZarapeImportsApp()
             }
         }
     }
 }
 
+@Composable
+fun ZarapeImportsApp() {
+    // Estado de autenticación
+    var isAuthenticated by remember { mutableStateOf(false) }
+    var isInitializing by remember { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Verificar estado de autenticación al iniciar
+    LaunchedEffect(key1 = Unit) {
+        val currentUser = FirebaseManager.getCurrentUser()
+        if (currentUser != null) {
+            // Usuario ya autenticado
+            isAuthenticated = true
+            
+            // Sincronizar datos de ejemplo con Firebase
+            coroutineScope.launch {
+                FirebaseDataSync.sincronizarTodo()
+            }
+        }
+        
+        isInitializing = false
+    }
+    
+    if (isInitializing) {
+        // Pantalla de carga mientras se verifica la autenticación
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SarapeBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = SarapeBrown)
+        }
+    } else if (!isAuthenticated) {
+        // Pantalla de inicio de sesión
+        LoginScreen(
+            onLoginSuccess = {
+                isAuthenticated = true
+                
+                // Sincronizar datos de ejemplo con Firebase
+                coroutineScope.launch {
+                    FirebaseDataSync.sincronizarTodo()
+                }
+            }
+        )
+    } else {
+        // Pantalla principal de la aplicación
+        ZarapeApp(
+            onLogout = {
+                FirebaseManager.cerrarSesion()
+                isAuthenticated = false
+            }
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ZarapeApp() {
+fun ZarapeApp(
+    onLogout: () -> Unit = {}
+) {
     var selectedTab by remember { mutableStateOf(0) }
     var showConfiguration by remember { mutableStateOf(false) }
     var showAccount by remember { mutableStateOf(false) }
@@ -126,24 +188,32 @@ fun ZarapeApp() {
             }
         }
     ) { innerPadding ->
+        // Pop-up de cuenta
+        if (showAccount) {
+            AccountDialog(
+                onDismiss = { showAccount = false },
+                onLogout = onLogout
+            )
+        }
+        
+        // Pop-up de configuración
+        if (showConfiguration) {
+            ConfiguracionScreen(onDismiss = { showConfiguration = false })
+        }
+        
+        // Contenido principal basado en la pestaña seleccionada
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(SarapeBackground)
         ) {
-            when {
-                showConfiguration -> ConfiguracionScreen(onBack = { showConfiguration = false })
-                showAccount -> CuentaScreen(onBack = { showAccount = false })
-                else -> {
-                    when (selectedTab) {
-                        0 -> VentasScreen()
-                        1 -> InventarioScreen()
-                        2 -> ClientesScreen()
-                        3 -> ReportesScreen()
-                        else -> VentasScreen()
-                    }
-                }
+            when (selectedTab) {
+                0 -> VentasScreen()
+                1 -> InventarioScreen()
+                2 -> ClientesScreen()
+                3 -> ReportesScreen()
+                else -> VentasScreen()
             }
             
             // Botón de configuración flotante
@@ -490,7 +560,7 @@ fun MenuCard(
 }
 
 @Composable
-fun ConfiguracionScreen(onBack: () -> Unit) {
+fun ConfiguracionScreen(onDismiss: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -501,7 +571,7 @@ fun ConfiguracionScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(onClick = onDismiss) {
                 Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = SarapeBrown)
             }
             Text(
@@ -556,103 +626,97 @@ fun ConfiguracionScreen(onBack: () -> Unit) {
 }
 
 @Composable
-fun CuentaScreen(onBack: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = SarapeBrown)
+fun AccountDialog(
+    onDismiss: () -> Unit,
+    onLogout: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.AccountCircle,
+                    contentDescription = null,
+                    tint = SarapeMorado,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Mi Cuenta",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
             }
-            Text(
-                text = "Mi Cuenta",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = SarapeMorado
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Avatar y nombre de usuario
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Filled.AccountCircle,
-                contentDescription = "Avatar",
-                tint = SarapeMorado,
-                modifier = Modifier.size(100.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Usuario Administrador",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Text(
-                text = "admin@zarapeimports.com",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Tarjetas de menú para la cuenta
-        MenuCard(
-            title = "Editar Perfil",
-            icon = Icons.Filled.Edit,
-            color = SarapeMorado,
-            onClick = { /* TODO */ },
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        MenuCard(
-            title = "Cambiar Contraseña",
-            icon = Icons.Filled.Lock,
-            color = SarapeMorado,
-            onClick = { /* TODO */ },
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        MenuCard(
-            title = "Notificaciones",
-            icon = Icons.Filled.Notifications,
-            color = SarapeMorado,
-            onClick = { /* TODO */ },
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        MenuCard(
-            title = "Cerrar Sesión",
-            icon = Icons.Filled.ExitToApp,
-            color = SarapeRojo,
-            onClick = { /* TODO */ },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                // Información del usuario actual
+                val currentUser = FirebaseManager.getCurrentUser()
+                if (currentUser != null) {
+                    Text(
+                        text = "Usuario: ${currentUser.email}",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                
+                MenuCard(
+                    title = "Editar Perfil",
+                    icon = Icons.Filled.Edit,
+                    color = SarapeMorado,
+                    onClick = { /* TODO */ },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                MenuCard(
+                    title = "Cambiar Contraseña",
+                    icon = Icons.Filled.Lock,
+                    color = SarapeMorado,
+                    onClick = { /* TODO */ },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                MenuCard(
+                    title = "Notificaciones",
+                    icon = Icons.Filled.Notifications,
+                    color = SarapeMorado,
+                    onClick = { /* TODO */ },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                MenuCard(
+                    title = "Cerrar Sesión",
+                    icon = Icons.Filled.ExitToApp,
+                    color = SarapeRojo,
+                    onClick = { 
+                        onDismiss()
+                        onLogout()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = {}
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ZarapeAppPreview() {
     ZarapeImportsTheme {
-        ZarapeApp()
+        ZarapeImportsApp()
     }
 }
