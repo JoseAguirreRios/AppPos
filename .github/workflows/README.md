@@ -11,7 +11,7 @@ Este flujo de trabajo se activa cuando:
 - Se crea un pull request hacia las ramas `main` o `master`
 
 Realiza las siguientes tareas:
-- Configura el entorno con JDK 17
+- Configura el entorno con JDK 11
 - Compila el proyecto con Gradle
 - Ejecuta pruebas unitarias
 - Realiza verificación de lint
