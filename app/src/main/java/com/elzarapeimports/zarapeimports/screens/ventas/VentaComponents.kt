@@ -1,6 +1,7 @@
 package com.elzarapeimports.zarapeimports.screens.ventas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,144 +34,56 @@ fun ElementoVentaItem(
     onDescuentoCambiado: (Double) -> Unit,
     onEliminar: () -> Unit
 ) {
-    var cantidad by remember { mutableStateOf(elementoVenta.cantidad.toString()) }
-    var descuento by remember { mutableStateOf((elementoVenta.descuento * 100).toInt().toString()) }
-    var mostrarOpciones by remember { mutableStateOf(false) }
+    var showEditarCantidad by remember { mutableStateOf(false) }
+    var showEditarDescuento by remember { mutableStateOf(false) }
     
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
-            // Detalles del producto
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = elementoVenta.producto.nombre,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = elementoVenta.producto.formatoPrecio(),
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-            
-            // Cantidad y subtotal
-            Column(
-                horizontalAlignment = Alignment.End
+            // Información del producto
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "${elementoVenta.cantidad} x ",
-                        fontSize = 14.sp
+                        text = elementoVenta.producto.nombre,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
                     )
                     
-                    IconButton(
-                        onClick = { mostrarOpciones = !mostrarOpciones },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (mostrarOpciones) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                            contentDescription = "Opciones",
-                            tint = SarapeAzul
-                        )
-                    }
-                }
-                
-                Text(
-                    text = elementoVenta.formatoSubtotal(),
-                    fontWeight = FontWeight.Bold
-                )
-                
-                if (elementoVenta.descuento > 0) {
                     Text(
-                        text = "Descuento: ${elementoVenta.formatoDescuento()}",
+                        text = "Código: ${elementoVenta.producto.codigo}",
                         fontSize = 12.sp,
-                        color = SarapeRojo
+                        color = Color.Gray
                     )
+                    
+                    if (elementoVenta.descuento > 0) {
+                        Text(
+                            text = "Descuento: ${(elementoVenta.descuento * 100).toInt()}%",
+                            fontSize = 12.sp,
+                            color = SarapeNaranja
+                        )
+                    }
                 }
-            }
-        }
-        
-        // Panel de opciones
-        if (mostrarOpciones) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Campo de cantidad
-                OutlinedTextField(
-                    value = cantidad,
-                    onValueChange = {
-                        cantidad = it
-                        if (it.isNotEmpty()) {
-                            try {
-                                val nuevaCantidad = it.toInt()
-                                if (nuevaCantidad > 0) {
-                                    onCantidadCambiada(nuevaCantidad)
-                                }
-                            } catch (e: NumberFormatException) {
-                                // Ignorar entrada no numérica
-                            }
-                        }
-                    },
-                    label = { Text("Cantidad") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    prefix = {
-                        Icon(
-                            imageVector = Icons.Filled.Numbers,
-                            contentDescription = null,
-                            tint = SarapeAzul
-                        )
-                    }
-                )
                 
-                // Campo de descuento
-                OutlinedTextField(
-                    value = descuento,
-                    onValueChange = {
-                        descuento = it
-                        if (it.isNotEmpty()) {
-                            try {
-                                val nuevoDescuento = it.toInt()
-                                if (nuevoDescuento >= 0 && nuevoDescuento <= 100) {
-                                    onDescuentoCambiado(nuevoDescuento / 100.0)
-                                }
-                            } catch (e: NumberFormatException) {
-                                // Ignorar entrada no numérica
-                            }
-                        }
-                    },
-                    label = { Text("Descuento") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    suffix = { Text("%") },
-                    prefix = {
-                        Icon(
-                            imageVector = Icons.Filled.Discount,
-                            contentDescription = null,
-                            tint = SarapeRojo
-                        )
-                    }
-                )
-                
-                // Botón de eliminar
                 IconButton(
                     onClick = onEliminar,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(SarapeRojo.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
@@ -179,7 +92,189 @@ fun ElementoVentaItem(
                     )
                 }
             }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Cantidad y precio
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilledIconButton(
+                        onClick = {
+                            if (elementoVenta.cantidad > 1) {
+                                onCantidadCambiada(elementoVenta.cantidad - 1)
+                            }
+                        },
+                        modifier = Modifier.size(32.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = SarapeRojo.copy(alpha = 0.1f),
+                            contentColor = SarapeRojo
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Remove,
+                            contentDescription = "Reducir cantidad",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(4.dp))
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color.White, shape = RoundedCornerShape(4.dp))
+                            .border(1.dp, Color.LightGray, shape = RoundedCornerShape(4.dp))
+                            .clickable { showEditarCantidad = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${elementoVenta.cantidad}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(4.dp))
+                    
+                    FilledIconButton(
+                        onClick = { onCantidadCambiada(elementoVenta.cantidad + 1) },
+                        modifier = Modifier.size(32.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = SarapeVerde.copy(alpha = 0.1f),
+                            contentColor = SarapeVerde
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Aumentar cantidad",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "$${String.format("%.2f", elementoVenta.subtotal())}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = SarapeBrown
+                    )
+                    
+                    Row {
+                        Text(
+                            text = "$${String.format("%.2f", elementoVenta.producto.precio)} c/u",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                        
+                        Spacer(modifier = Modifier.width(4.dp))
+                        
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Editar descuento",
+                            tint = SarapeAzul,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { showEditarDescuento = true }
+                        )
+                    }
+                }
+            }
         }
+    }
+    
+    // Diálogos para editar cantidad y descuento
+    if (showEditarCantidad) {
+        var cantidadText by remember { mutableStateOf(elementoVenta.cantidad.toString()) }
+        
+        AlertDialog(
+            onDismissRequest = { showEditarCantidad = false },
+            title = { Text("Editar cantidad") },
+            text = {
+                OutlinedTextField(
+                    value = cantidadText,
+                    onValueChange = { 
+                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                            cantidadText = it
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    label = { Text("Cantidad") }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val cantidad = cantidadText.toIntOrNull() ?: 1
+                        if (cantidad > 0) {
+                            onCantidadCambiada(cantidad)
+                        }
+                        showEditarCantidad = false
+                    }
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditarCantidad = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
+    if (showEditarDescuento) {
+        var descuentoText by remember { mutableStateOf((elementoVenta.descuento * 100).toInt().toString()) }
+        
+        AlertDialog(
+            onDismissRequest = { showEditarDescuento = false },
+            title = { Text("Editar descuento") },
+            text = {
+                Column {
+                    Text("Ingrese el porcentaje de descuento (0-100)")
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = descuentoText,
+                        onValueChange = { 
+                            if (it.isEmpty() || (it.all { char -> char.isDigit() } && it.toIntOrNull() ?: 0 <= 100)) {
+                                descuentoText = it
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        label = { Text("Descuento %") },
+                        trailingIcon = { Text("%") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val descuento = (descuentoText.toDoubleOrNull() ?: 0.0) / 100.0
+                        onDescuentoCambiado(descuento)
+                        showEditarDescuento = false
+                    }
+                ) {
+                    Text("Aplicar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditarDescuento = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

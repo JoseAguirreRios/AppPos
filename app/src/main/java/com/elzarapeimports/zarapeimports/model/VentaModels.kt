@@ -60,12 +60,12 @@ data class ElementoVenta(
 /**
  * Tipos de pago soportados
  */
-enum class MetodoPago {
-    EFECTIVO,
-    TARJETA_DEBITO,
-    TARJETA_CREDITO,
-    TRANSFERENCIA,
-    OTRO
+enum class MetodoPago(val descripcion: String) {
+    EFECTIVO("Efectivo"),
+    TARJETA_DEBITO("Tarjeta de débito"),
+    TARJETA_CREDITO("Tarjeta de crédito"),
+    TRANSFERENCIA("Transferencia"),
+    OTRO("Otro método")
 }
 
 /**
@@ -80,7 +80,9 @@ data class Venta(
     var comentarios: String = "",
     var completada: Boolean = false,
     var facturada: Boolean = false,
-    var referenciaPago: String = ""
+    var referenciaPago: String = "",
+    var numeroFactura: String = "",
+    var esCotizacion: Boolean = false
 ) {
     fun subtotal(): Double = elementos.sumOf { it.subtotal() }
     
@@ -101,7 +103,27 @@ data class Venta(
     
     fun formatoFecha(): String {
         val dateTime = fechaHora.toLocalDateTime(TimeZone.currentSystemDefault())
-        return "${dateTime.date.dayOfMonth}/${dateTime.date.monthNumber}/${dateTime.date.year} ${dateTime.hour}:${dateTime.minute}"
+        return String.format("%02d/%02d/%d %02d:%02d", 
+            dateTime.date.dayOfMonth,
+            dateTime.date.monthNumber,
+            dateTime.date.year,
+            dateTime.hour,
+            dateTime.minute
+        )
+    }
+    
+    fun formatoFechaCorta(): String {
+        val dateTime = fechaHora.toLocalDateTime(TimeZone.currentSystemDefault())
+        return String.format("%02d/%02d/%d", 
+            dateTime.date.dayOfMonth,
+            dateTime.date.monthNumber,
+            dateTime.date.year
+        )
+    }
+    
+    fun formatoHora(): String {
+        val dateTime = fechaHora.toLocalDateTime(TimeZone.currentSystemDefault())
+        return String.format("%02d:%02d", dateTime.hour, dateTime.minute)
     }
 }
 

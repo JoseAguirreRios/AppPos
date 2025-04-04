@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.elzarapeimports.zarapeimports.model.Venta
 import com.elzarapeimports.zarapeimports.ui.theme.*
 
 class MainActivity : ComponentActivity() {
@@ -165,70 +166,90 @@ fun ZarapeApp() {
 @Composable
 fun VentasScreen() {
     var mostrarNuevaVenta by remember { mutableStateOf(false) }
+    var mostrarHistorial by remember { mutableStateOf(false) }
+    var ventaParaEditar by remember { mutableStateOf<Venta?>(null) }
     
-    if (mostrarNuevaVenta) {
-        com.elzarapeimports.zarapeimports.screens.ventas.NuevaVentaScreen(
-            onBack = { mostrarNuevaVenta = false }
-        )
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Gestión de Ventas",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = SarapeRojo
+    when {
+        ventaParaEditar != null -> {
+            com.elzarapeimports.zarapeimports.screens.ventas.EditarVentaScreen(
+                venta = ventaParaEditar!!,
+                onBack = { ventaParaEditar = null }
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Tarjetas de menú de colores para las diferentes funciones
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        }
+        mostrarNuevaVenta -> {
+            com.elzarapeimports.zarapeimports.screens.ventas.NuevaVentaScreen(
+                onBack = { mostrarNuevaVenta = false }
+            )
+        }
+        mostrarHistorial -> {
+            com.elzarapeimports.zarapeimports.screens.ventas.HistorialVentasScreen(
+                onBack = { mostrarHistorial = false },
+                onEditarVenta = { venta ->
+                    mostrarHistorial = false
+                    ventaParaEditar = venta
+                }
+            )
+        }
+        else -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MenuCard(
-                    title = "Nueva Venta",
-                    icon = Icons.Filled.Add,
-                    color = SarapeRojo,
-                    onClick = { mostrarNuevaVenta = true },
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = "Gestión de Ventas",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = SarapeRojo
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                MenuCard(
-                    title = "Historial",
-                    icon = Icons.Filled.List,
-                    color = SarapeNaranja,
-                    onClick = { /* TODO */ },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                MenuCard(
-                    title = "Devoluciones",
-                    icon = Icons.Filled.Undo,
-                    color = SarapeAzul,
-                    onClick = { /* TODO */ },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                MenuCard(
-                    title = "Cotizaciones",
-                    icon = Icons.Filled.Description,
-                    color = SarapeMorado,
-                    onClick = { /* TODO */ },
-                    modifier = Modifier.weight(1f)
-                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Tarjetas de menú de colores para las diferentes funciones
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    MenuCard(
+                        title = "Nueva Venta",
+                        icon = Icons.Filled.Add,
+                        color = SarapeRojo,
+                        onClick = { mostrarNuevaVenta = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    MenuCard(
+                        title = "Historial",
+                        icon = Icons.Filled.List,
+                        color = SarapeNaranja,
+                        onClick = { mostrarHistorial = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    MenuCard(
+                        title = "Devoluciones",
+                        icon = Icons.Filled.Undo,
+                        color = SarapeAzul,
+                        onClick = { /* TODO */ },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    MenuCard(
+                        title = "Cotizaciones",
+                        icon = Icons.Filled.Description,
+                        color = SarapeMorado,
+                        onClick = { /* TODO */ },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

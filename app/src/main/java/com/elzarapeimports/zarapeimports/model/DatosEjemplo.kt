@@ -1,9 +1,22 @@
 package com.elzarapeimports.zarapeimports.model
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.hours
+
 /**
  * Proporciona datos de ejemplo para el desarrollo y pruebas
  */
 object DatosEjemplo {
+    
+    // Contador para generar números de factura secuenciales
+    private val contadorFactura = AtomicInteger(1)
     
     val productosEjemplo = listOf(
         Producto(
@@ -152,5 +165,79 @@ object DatosEjemplo {
         venta.cliente = clientesEjemplo[2]
         
         return venta
+    }
+    
+    // Generar un nuevo número de factura
+    fun generarNumeroFactura(): String {
+        return String.format("#%05d", contadorFactura.getAndIncrement())
+    }
+    
+    // Historial de ventas de ejemplo
+    val historialVentas = mutableListOf<Venta>().apply {
+        // Crear algunas ventas pasadas para el historial
+        val ahora = Clock.System.now()
+        val timezone = TimeZone.currentSystemDefault()
+        
+        // Venta de hoy hace 2 horas
+        add(Venta(
+            elementos = mutableListOf(
+                ElementoVenta(productosEjemplo[0], 1),
+                ElementoVenta(productosEjemplo[4], 2)
+            ),
+            cliente = clientesEjemplo[0],
+            metodoPago = MetodoPago.EFECTIVO,
+            fechaHora = Clock.System.now() - 2.hours,
+            completada = true,
+            facturada = true,
+            numeroFactura = "#00001"
+        ))
+        
+        // Venta de ayer
+        val ayer = LocalDateTime(
+            ahora.toLocalDateTime(timezone).date.year,
+            ahora.toLocalDateTime(timezone).date.monthNumber,
+            ahora.toLocalDateTime(timezone).date.dayOfMonth - 1,
+            14, 30, 0
+        ).toInstant(timezone)
+        
+        add(Venta(
+            elementos = mutableListOf(
+                ElementoVenta(productosEjemplo[2], 1),
+                ElementoVenta(productosEjemplo[7], 1)
+            ),
+            cliente = clientesEjemplo[1],
+            metodoPago = MetodoPago.TARJETA_CREDITO,
+            fechaHora = ayer,
+            completada = true,
+            facturada = true,
+            referenciaPago = "REF-4578",
+            numeroFactura = "#00002"
+        ))
+        
+        // Venta de hace 3 días
+        val hace3Dias = LocalDateTime(
+            ahora.toLocalDateTime(timezone).date.year,
+            ahora.toLocalDateTime(timezone).date.monthNumber,
+            ahora.toLocalDateTime(timezone).date.dayOfMonth - 3,
+            9, 15, 0
+        ).toInstant(timezone)
+        
+        add(Venta(
+            elementos = mutableListOf(
+                ElementoVenta(productosEjemplo[3], 1),
+                ElementoVenta(productosEjemplo[5], 3),
+                ElementoVenta(productosEjemplo[8], 2)
+            ),
+            cliente = clientesEjemplo[4],
+            metodoPago = MetodoPago.TRANSFERENCIA,
+            fechaHora = hace3Dias,
+            completada = true,
+            facturada = true,
+            referenciaPago = "TRF-9876",
+            numeroFactura = "#00003"
+        ))
+        
+        // Actualizar el contador para que comience después de los números ya usados
+        contadorFactura.set(4)
     }
 } 

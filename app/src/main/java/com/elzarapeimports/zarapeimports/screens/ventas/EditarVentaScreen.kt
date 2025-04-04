@@ -18,72 +18,63 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.elzarapeimports.zarapeimports.model.*
 import com.elzarapeimports.zarapeimports.ui.theme.*
-import com.elzarapeimports.zarapeimports.util.rememberTicketGenerator
 import kotlinx.datetime.Clock
 
-// Enumeración para los modos de finalización de venta
-enum class ModalidadFinalizacion {
-    NORMAL,
-    COMO_PRESUPUESTO
-}
-
 /**
- * Pantalla para crear una nueva venta
+ * Pantalla para editar una venta existente
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NuevaVentaScreen(
+fun EditarVentaScreen(
+    venta: Venta,
     onBack: () -> Unit
 ) {
-    var ventaActual by remember { mutableStateOf(Venta()) }
+    var ventaActual by remember { mutableStateOf(venta) }
     var mostrarDialogoProducto by remember { mutableStateOf(false) }
-    var mostrarDialogoEscaneo by remember { mutableStateOf(false) }
     var mostrarDialogoCliente by remember { mutableStateOf(false) }
-    var mostrarDialogoPago by remember { mutableStateOf(false) }
+    var mostrarDialogoConfirmacion by remember { mutableStateOf(false) }
+    var mostrarDialogoMetodoPago by remember { mutableStateOf(false) }
+    var cambiosGuardados by remember { mutableStateOf(false) }
     
-    val ticketGenerator = rememberTicketGenerator()
-    
-    // Función para finalizar la venta
-    fun finalizarVenta(venta: Venta, modalidad: ModalidadFinalizacion) {
-        venta.fechaHora = Clock.System.now()
-        venta.completada = true
-        
-        when (modalidad) {
-            ModalidadFinalizacion.NORMAL -> {
-                // Asignar número de factura al completar la venta
-                venta.numeroFactura = DatosEjemplo.generarNumeroFactura()
-                venta.facturada = true
-                
-                // Aquí iría la lógica para guardar la venta en base de datos
-                // Por ahora, podemos agregar la venta a nuestro historial de ejemplo para ver los resultados
-                DatosEjemplo.historialVentas.add(0, venta)
-            }
-            ModalidadFinalizacion.COMO_PRESUPUESTO -> {
-                venta.esCotizacion = true
-                // Lógica para guardar como presupuesto...
-            }
-        }
-        
-        // Limpiar la venta actual y volver al menú
-        ventaActual = Venta()
-        onBack()
-    }
+    // Verificar si hay cambios
+    val hayModificaciones = ventaActual != venta
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva Venta") },
+                title = { Text("Editar Venta") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        if (hayModificaciones && !cambiosGuardados) {
+                            mostrarDialogoConfirmacion = true
+                        } else {
+                            onBack()
+                        }
+                    }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Regresar")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SarapeBackground
-                )
+                ),
+                actions = {
+                    if (hayModificaciones) {
+                        IconButton(onClick = {
+                            // Guardar los cambios
+                            actualizarVentaEnHistorial(ventaActual)
+                            cambiosGuardados = true
+                            onBack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Save,
+                                contentDescription = "Guardar cambios",
+                                tint = SarapeVerde
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -93,7 +84,7 @@ fun NuevaVentaScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Título y botones de acción
+            // Información de la factura
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -101,29 +92,21 @@ fun NuevaVentaScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Venta ${ventaActual.id.substring(0, 8)}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = SarapeRojo
-                )
+                Column {
+                    Text(
+                        text = "Factura: ${ventaActual.numeroFactura}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SarapeRojo
+                    )
+                    Text(
+                        text = "Fecha: ${ventaActual.formatoFecha()}",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
                 
                 Row {
-                    IconButton(
-                        onClick = { mostrarDialogoEscaneo = true },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(SarapeRojo.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.QrCodeScanner,
-                            contentDescription = "Escanear código",
-                            tint = SarapeRojo
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(8.dp))
-                    
                     IconButton(
                         onClick = { mostrarDialogoProducto = true },
                         modifier = Modifier
@@ -194,7 +177,22 @@ fun NuevaVentaScreen(
                     }
                     
                     if (ventaActual.cliente != null) {
-                        IconButton(onClick = { ventaActual = ventaActual.copy(cliente = null) }) {
+                        IconButton(onClick = { 
+                            // Crear nueva instancia de venta sin cliente
+                            ventaActual = Venta(
+                                id = ventaActual.id,
+                                elementos = ventaActual.elementos,
+                                cliente = null,
+                                metodoPago = ventaActual.metodoPago,
+                                fechaHora = ventaActual.fechaHora,
+                                comentarios = ventaActual.comentarios,
+                                completada = ventaActual.completada,
+                                facturada = ventaActual.facturada,
+                                referenciaPago = ventaActual.referenciaPago,
+                                numeroFactura = ventaActual.numeroFactura,
+                                esCotizacion = ventaActual.esCotizacion
+                            )
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
                                 contentDescription = "Quitar cliente",
@@ -230,7 +228,7 @@ fun NuevaVentaScreen(
                             val index = ventaActual.elementos.indexOf(elementoVenta)
                             val nuevosElementos = ventaActual.elementos.toMutableList()
                             nuevosElementos[index] = elementoVenta.copy(cantidad = nuevaCantidad)
-                            // Crear una nueva instancia de venta
+                            // Creamos una venta completamente nueva con los nuevos elementos
                             ventaActual = Venta(
                                 id = ventaActual.id,
                                 elementos = nuevosElementos,
@@ -249,7 +247,7 @@ fun NuevaVentaScreen(
                             val index = ventaActual.elementos.indexOf(elementoVenta)
                             val nuevosElementos = ventaActual.elementos.toMutableList()
                             nuevosElementos[index] = elementoVenta.copy(descuento = nuevoDescuento)
-                            // Crear una nueva instancia de venta
+                            // Creamos una venta completamente nueva con los nuevos elementos
                             ventaActual = Venta(
                                 id = ventaActual.id,
                                 elementos = nuevosElementos,
@@ -267,7 +265,7 @@ fun NuevaVentaScreen(
                         onEliminar = {
                             val nuevosElementos = ventaActual.elementos.toMutableList()
                             nuevosElementos.remove(elementoVenta)
-                            // Crear una nueva instancia de venta
+                            // Creamos una venta completamente nueva con los nuevos elementos
                             ventaActual = Venta(
                                 id = ventaActual.id,
                                 elementos = nuevosElementos,
@@ -362,24 +360,85 @@ fun NuevaVentaScreen(
                 }
             }
             
-            // Botón de cobrar
+            // Método de pago
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = SarapeBackground
+                ),
+                shape = RoundedCornerShape(8.dp),
+                border = CardDefaults.outlinedCardBorder()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Método de Pago",
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = ventaActual.metodoPago.descripcion,
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        Button(
+                            onClick = {
+                                // Mostrar diálogo para cambiar método de pago
+                                mostrarDialogoMetodoPago = true
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SarapeAzul
+                            )
+                        ) {
+                            Text("Cambiar")
+                        }
+                    }
+                    
+                    if (ventaActual.referenciaPago.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Referencia: ${ventaActual.referenciaPago}",
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+            
+            // Botón de guardar
             Button(
-                onClick = { mostrarDialogoPago = true },
+                onClick = {
+                    // Guardar los cambios
+                    actualizarVentaEnHistorial(ventaActual)
+                    cambiosGuardados = true
+                    onBack()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SarapeRojo
+                    containerColor = SarapeVerde
                 ),
-                enabled = ventaActual.elementos.isNotEmpty()
+                enabled = hayModificaciones && ventaActual.elementos.isNotEmpty()
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Payment,
+                    imageVector = Icons.Filled.Save,
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "COBRAR ${ventaActual.formatoTotal()}",
+                    text = "GUARDAR CAMBIOS",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -403,7 +462,7 @@ fun NuevaVentaScreen(
                         nuevosElementos.add(ElementoVenta(producto = producto))
                     }
                     
-                    // Crear una nueva instancia de venta
+                    // Creamos una venta completamente nueva con los nuevos elementos
                     ventaActual = Venta(
                         id = ventaActual.id,
                         elementos = nuevosElementos,
@@ -424,102 +483,111 @@ fun NuevaVentaScreen(
             )
         }
         
-        if (mostrarDialogoEscaneo) {
-            EscaneoDialog(
-                onCodigoDetectado = { codigo ->
-                    // Buscar el producto por código
-                    val productoEncontrado = DatosEjemplo.productosEjemplo.find { it.codigo == codigo }
-                    if (productoEncontrado != null) {
-                        // Revisar si el producto ya está en la lista
-                        val elementoExistente = ventaActual.elementos.find { it.producto.id == productoEncontrado.id }
-                        val nuevosElementos = ventaActual.elementos.toMutableList()
-                        
-                        if (elementoExistente != null) {
-                            // Actualizar cantidad
-                            val index = ventaActual.elementos.indexOf(elementoExistente)
-                            nuevosElementos[index] = elementoExistente.copy(cantidad = elementoExistente.cantidad + 1)
-                        } else {
-                            // Agregar nuevo elemento
-                            nuevosElementos.add(ElementoVenta(producto = productoEncontrado))
-                        }
-                        
-                        // Crear una nueva instancia de venta
-                        ventaActual = Venta(
-                            id = ventaActual.id,
-                            elementos = nuevosElementos,
-                            cliente = ventaActual.cliente,
-                            metodoPago = ventaActual.metodoPago,
-                            fechaHora = ventaActual.fechaHora,
-                            comentarios = ventaActual.comentarios,
-                            completada = ventaActual.completada,
-                            facturada = ventaActual.facturada,
-                            referenciaPago = ventaActual.referenciaPago,
-                            numeroFactura = ventaActual.numeroFactura,
-                            esCotizacion = ventaActual.esCotizacion
-                        )
-                    }
-                    mostrarDialogoEscaneo = false
-                },
-                onDismiss = { mostrarDialogoEscaneo = false }
-            )
-        }
-        
         if (mostrarDialogoCliente) {
             SeleccionClienteDialog(
                 onClienteSeleccionado = { cliente ->
-                    ventaActual = ventaActual.copy(cliente = cliente)
+                    // Crear nueva instancia de venta con el cliente seleccionado
+                    ventaActual = Venta(
+                        id = ventaActual.id,
+                        elementos = ventaActual.elementos,
+                        cliente = cliente,
+                        metodoPago = ventaActual.metodoPago,
+                        fechaHora = ventaActual.fechaHora,
+                        comentarios = ventaActual.comentarios,
+                        completada = ventaActual.completada,
+                        facturada = ventaActual.facturada,
+                        referenciaPago = ventaActual.referenciaPago,
+                        numeroFactura = ventaActual.numeroFactura,
+                        esCotizacion = ventaActual.esCotizacion
+                    )
                     mostrarDialogoCliente = false
                 },
                 onDismiss = { mostrarDialogoCliente = false }
             )
         }
         
-        if (mostrarDialogoPago) {
-            DialogoPago(
-                venta = ventaActual,
-                onPago = { metodoPago, referencia ->
-                    ventaActual.metodoPago = metodoPago
-                    ventaActual.referenciaPago = referencia
-                    // Finalizar la venta
-                    finalizarVenta(ventaActual, ModalidadFinalizacion.NORMAL)
+        if (mostrarDialogoMetodoPago) {
+            DialogoMetodoPago(
+                metodoPagoActual = ventaActual.metodoPago,
+                referenciaActual = ventaActual.referenciaPago,
+                onConfirmar = { metodoPago, referencia ->
+                    // Crear nueva instancia de venta con el método de pago actualizado
+                    ventaActual = Venta(
+                        id = ventaActual.id,
+                        elementos = ventaActual.elementos,
+                        cliente = ventaActual.cliente,
+                        metodoPago = metodoPago,
+                        fechaHora = ventaActual.fechaHora,
+                        comentarios = ventaActual.comentarios,
+                        completada = ventaActual.completada,
+                        facturada = ventaActual.facturada,
+                        referenciaPago = referencia,
+                        numeroFactura = ventaActual.numeroFactura,
+                        esCotizacion = ventaActual.esCotizacion
+                    )
+                    mostrarDialogoMetodoPago = false
                 },
-                onDismiss = { mostrarDialogoPago = false }
+                onDismiss = { 
+                    mostrarDialogoMetodoPago = false 
+                }
+            )
+        }
+        
+        if (mostrarDialogoConfirmacion) {
+            AlertDialog(
+                onDismissRequest = { mostrarDialogoConfirmacion = false },
+                title = { Text("Cambios sin guardar") },
+                text = { Text("¿Desea salir sin guardar los cambios?") },
+                confirmButton = {
+                    Button(
+                        onClick = { onBack() }
+                    ) {
+                        Text("Salir sin guardar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { mostrarDialogoConfirmacion = false }) {
+                        Text("Cancelar")
+                    }
+                }
             )
         }
     }
 }
 
-// Diálogo de pago completo
+// Función para actualizar una venta en el historial
+private fun actualizarVentaEnHistorial(venta: Venta) {
+    // Buscar la venta en el historial
+    val indice = DatosEjemplo.historialVentas.indexOfFirst { it.id == venta.id }
+    if (indice >= 0) {
+        // Reemplazar la venta en el historial
+        DatosEjemplo.historialVentas[indice] = venta
+    }
+}
+
+// Diálogo para cambiar el método de pago
 @Composable
-fun DialogoPago(
-    venta: Venta,
-    onPago: (MetodoPago, String) -> Unit,
+fun DialogoMetodoPago(
+    metodoPagoActual: MetodoPago,
+    referenciaActual: String,
+    onConfirmar: (MetodoPago, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var metodoPagoSeleccionado by remember { mutableStateOf(MetodoPago.EFECTIVO) }
-    var referencia by remember { mutableStateOf("") }
-    var showReferencia by remember { mutableStateOf(false) }
+    var metodoPagoSeleccionado by remember { mutableStateOf(metodoPagoActual) }
+    var referencia by remember { mutableStateOf(referenciaActual) }
+    var showReferencia by remember { mutableStateOf(metodoPagoActual != MetodoPago.EFECTIVO) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Procesar pago",
+                text = "Cambiar método de pago",
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Column {
-                Text(
-                    text = "Total a cobrar: ${venta.formatoTotal()}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = SarapeRojo
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text("Seleccione método de pago:")
+                Text("Seleccione el nuevo método de pago:")
                 
                 RadioGroupOpcionesPago(
                     options = MetodoPago.values().map { it.descripcion },
@@ -552,13 +620,13 @@ fun DialogoPago(
         confirmButton = {
             Button(
                 onClick = {
-                    onPago(metodoPagoSeleccionado, referencia)
+                    onConfirmar(metodoPagoSeleccionado, referencia)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SarapeRojo
+                    containerColor = SarapeVerde
                 )
             ) {
-                Text("Completar pago")
+                Text("Guardar")
             }
         },
         dismissButton = {
@@ -568,3 +636,28 @@ fun DialogoPago(
         }
     )
 }
+
+@Composable
+fun RadioGroupOpcionesPago(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
+    Column {
+        options.forEach { option ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clickable { onOptionSelected(option) },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = option == selectedOption,
+                    onClick = { onOptionSelected(option) }
+                )
+                Text(text = option)
+            }
+        }
+    }
+} 
