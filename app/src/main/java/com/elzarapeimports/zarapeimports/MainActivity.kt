@@ -27,6 +27,14 @@ import com.elzarapeimports.zarapeimports.firebase.FirebaseDataSync
 import com.elzarapeimports.zarapeimports.firebase.FirebaseManager
 import com.elzarapeimports.zarapeimports.firebase.LoginScreen
 import com.elzarapeimports.zarapeimports.model.Venta
+import com.elzarapeimports.zarapeimports.model.Producto
+import com.elzarapeimports.zarapeimports.screens.inventario.CategoriasScreen
+import com.elzarapeimports.zarapeimports.screens.inventario.EditarProductoScreen
+import com.elzarapeimports.zarapeimports.screens.inventario.InventarioScreen
+import com.elzarapeimports.zarapeimports.screens.inventario.MovimientosInventarioScreen
+import com.elzarapeimports.zarapeimports.screens.ventas.EditarVentaScreen
+import com.elzarapeimports.zarapeimports.screens.ventas.HistorialVentasScreen
+import com.elzarapeimports.zarapeimports.screens.ventas.NuevaVentaScreen
 import com.elzarapeimports.zarapeimports.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -107,6 +115,17 @@ fun ZarapeApp(
     var showConfiguration by remember { mutableStateOf(false) }
     var showAccount by remember { mutableStateOf(false) }
     
+    // Estados para navegación de pantallas
+    var mostrarNuevaVenta by remember { mutableStateOf(false) }
+    var mostrarHistorial by remember { mutableStateOf(false) }
+    var mostrarVentaEnEdicion by remember { mutableStateOf<Venta?>(null) }
+    var mostrarInventario by remember { mutableStateOf(false) }
+    var mostrarInventarioProductos by remember { mutableStateOf(false) }
+    var productoEnEdicion by remember { mutableStateOf<Producto?>(null) }
+    var mostrarCategoriasInventario by remember { mutableStateOf(false) }
+    var mostrarProveedoresInventario by remember { mutableStateOf(false) }
+    var mostrarMovimientosInventario by remember { mutableStateOf(false) }
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -147,7 +166,15 @@ fun ZarapeApp(
             ) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
+                    onClick = { 
+                        selectedTab = 0
+                        // Reiniciar los estados de navegación
+                        mostrarInventario = false
+                        mostrarInventarioProductos = false
+                        mostrarCategoriasInventario = false 
+                        mostrarProveedoresInventario = false
+                        mostrarMovimientosInventario = false
+                    },
                     icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Ventas") },
                     label = { Text("Ventas") },
                     colors = NavigationBarItemDefaults.colors(
@@ -157,7 +184,14 @@ fun ZarapeApp(
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
+                    onClick = { 
+                        selectedTab = 1
+                        // Reiniciar los estados de navegación específicos del inventario
+                        mostrarInventarioProductos = false
+                        mostrarCategoriasInventario = false
+                        mostrarProveedoresInventario = false
+                        mostrarMovimientosInventario = false
+                    },
                     icon = { Icon(Icons.Filled.List, contentDescription = "Inventario") },
                     label = { Text("Inventario") },
                     colors = NavigationBarItemDefaults.colors(
@@ -167,7 +201,15 @@ fun ZarapeApp(
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
+                    onClick = { 
+                        selectedTab = 2
+                        // Reiniciar los estados de navegación
+                        mostrarInventario = false
+                        mostrarInventarioProductos = false
+                        mostrarCategoriasInventario = false
+                        mostrarProveedoresInventario = false
+                        mostrarMovimientosInventario = false
+                    },
                     icon = { Icon(Icons.Filled.Group, contentDescription = "Clientes") },
                     label = { Text("Clientes") },
                     colors = NavigationBarItemDefaults.colors(
@@ -177,7 +219,15 @@ fun ZarapeApp(
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 },
+                    onClick = { 
+                        selectedTab = 3
+                        // Reiniciar los estados de navegación
+                        mostrarInventario = false
+                        mostrarInventarioProductos = false
+                        mostrarCategoriasInventario = false
+                        mostrarProveedoresInventario = false
+                        mostrarMovimientosInventario = false
+                    },
                     icon = { Icon(Icons.Filled.InsertChart, contentDescription = "Reportes") },
                     label = { Text("Reportes") },
                     colors = NavigationBarItemDefaults.colors(
@@ -201,33 +251,122 @@ fun ZarapeApp(
             ConfiguracionScreen(onDismiss = { showConfiguration = false })
         }
         
-        // Contenido principal basado en la pestaña seleccionada
+        // Pantalla principal basada en la pestaña seleccionada
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(SarapeBackground)
         ) {
-            when (selectedTab) {
-                0 -> VentasScreen()
-                1 -> InventarioScreen()
-                2 -> ClientesScreen()
-                3 -> ReportesScreen()
-                else -> VentasScreen()
+            // Botón flotante de configuración
+            FloatingActionButton(
+                onClick = { showConfiguration = true },
+                containerColor = SarapeNaranja,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Configuración",
+                    tint = Color.White
+                )
             }
             
-            // Botón de configuración flotante
-            if (!showConfiguration && !showAccount) {
-                FloatingActionButton(
-                    onClick = { showConfiguration = true },
-                    containerColor = SarapeNaranja,
-                    contentColor = Color.White,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                ) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Configuración")
+            // Contenido basado en la navegación y pestaña seleccionada
+            if (mostrarNuevaVenta) {
+                NuevaVentaScreen(
+                    onBack = { mostrarNuevaVenta = false }
+                )
+            } else if (mostrarHistorial) {
+                HistorialVentasScreen(
+                    onBack = { mostrarHistorial = false },
+                    onEditarVenta = { venta ->
+                        mostrarVentaEnEdicion = venta
+                        mostrarHistorial = false
+                    }
+                )
+            } else if (mostrarVentaEnEdicion != null) {
+                EditarVentaScreen(
+                    venta = mostrarVentaEnEdicion!!,
+                    onBack = {
+                        mostrarVentaEnEdicion = null
+                        mostrarHistorial = true
+                    }
+                )
+            } else if (mostrarInventario) {
+                if (mostrarInventarioProductos) {
+                    InventarioScreen(
+                        onBack = { mostrarInventarioProductos = false },
+                        onNuevoProducto = { 
+                            productoEnEdicion = null
+                            mostrarInventarioProductos = false
+                        },
+                        onEditarProducto = { producto -> 
+                            productoEnEdicion = producto
+                            mostrarInventarioProductos = false
+                        },
+                        onGestionarCategorias = { mostrarCategoriasInventario = true; mostrarInventarioProductos = false },
+                        onGestionarProveedores = { mostrarProveedoresInventario = true; mostrarInventarioProductos = false },
+                        onVerMovimientos = { mostrarMovimientosInventario = true; mostrarInventarioProductos = false }
+                    )
+                } else if (mostrarMovimientosInventario) {
+                    MovimientosInventarioScreen(
+                        onBack = { 
+                            mostrarMovimientosInventario = false 
+                            mostrarInventarioProductos = true
+                        }
+                    )
+                } else if (mostrarCategoriasInventario) {
+                    CategoriasScreen(
+                        onBack = {
+                            mostrarCategoriasInventario = false
+                            mostrarInventarioProductos = true
+                        }
+                    )
+                } else if (productoEnEdicion != null || (!mostrarInventarioProductos && !mostrarCategoriasInventario && !mostrarMovimientosInventario)) {
+                    // Pantalla de edición o creación de producto
+                    EditarProductoScreen(
+                        productoExistente = productoEnEdicion,
+                        onBack = {
+                            productoEnEdicion = null
+                            mostrarInventarioProductos = true
+                        },
+                        onSave = { producto ->
+                            // Aquí implementaríamos la lógica para guardar el producto
+                            // en una base de datos real
+                            productoEnEdicion = null
+                            mostrarInventarioProductos = true
+                        }
+                    )
+                } else {
+                    // Menú principal de inventario
+                    InventarioMenuScreen(
+                        onProductos = { 
+                            mostrarInventarioProductos = true 
+                        },
+                        onCategorias = {
+                            mostrarCategoriasInventario = true
+                        },
+                        onBack = { 
+                            mostrarInventario = false 
+                        }
+                    )
                 }
+            } else if (selectedTab == 0) {
+                VentasScreen()
+            } else if (selectedTab == 1) {
+                InventarioMenuScreen(
+                    onProductos = { 
+                        mostrarInventario = true
+                        mostrarInventarioProductos = true
+                    },
+                    onBack = { mostrarInventario = false }
+                )
+            } else if (selectedTab == 2) {
+                ClientesScreen()
+            } else {
+                ReportesScreen()
             }
         }
     }
@@ -711,6 +850,76 @@ fun AccountDialog(
         confirmButton = {},
         dismissButton = {}
     )
+}
+
+@Composable
+fun InventarioMenuScreen(
+    onProductos: () -> Unit = {},
+    onCategorias: () -> Unit = {},
+    onEntradas: () -> Unit = {},
+    onProveedores: () -> Unit = {},
+    onBack: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Inventario",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = SarapeAzul
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Tarjetas de menú de colores para las diferentes funciones
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            MenuCard(
+                title = "Productos",
+                icon = Icons.Filled.List,
+                color = SarapeAzul,
+                onClick = { onProductos() },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            MenuCard(
+                title = "Categorías",
+                icon = Icons.Filled.Label,
+                color = SarapeVerde,
+                onClick = { onCategorias() },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            MenuCard(
+                title = "Entradas",
+                icon = Icons.Filled.Input,
+                color = SarapeTurquesa,
+                onClick = { onEntradas() },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            MenuCard(
+                title = "Proveedores",
+                icon = Icons.Filled.Business,
+                color = SarapeAmarillo,
+                onClick = { onProveedores() },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
